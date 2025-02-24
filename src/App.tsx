@@ -1,5 +1,6 @@
 import { Button } from "@heroui/button";
 import { ChangeEvent, useState } from "react";
+import Mode from "./page/mode";
 
 export default function App() {
   const [count, setCount] = useState(0);
@@ -23,10 +24,7 @@ export default function App() {
 
   return (
     <>
-      <h2>Rectangle Creator</h2>
-      <p>
-        Count: <input id="count" value={count} onChange={handleOnChange} />
-      </p>
+      <Mode />
       <Button color="primary" onPress={handleCreate}>
         Create1
       </Button>
