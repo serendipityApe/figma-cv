@@ -153,7 +153,7 @@ const resume = {
   },
 };
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__);
+figma.showUI(__html__, { width: 350, height: 450, themeColors: true });
 const PAGE_WIDTH = 8.5 * 96; // Standard US Letter size width in pixels
 const PAGE_HEIGHT = 11 * 96; // Standard US Letter size height in pixels
 

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && npm run build:main",
+    "build:watch": "tsc && vite build --watch && npm run build:main",
     "lint": "eslint -c .eslintrc.json ./src/**/**/*.{ts,tsx} --fix",
     "preview": "vite preview",
     "build:main": "esbuild lib/code.ts --bundle --outfile=dist/code.js"

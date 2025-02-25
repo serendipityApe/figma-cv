@@ -1,6 +1,10 @@
 import { RadioGroup, useRadio, VisuallyHidden, cn } from "@heroui/react";
 
-export const CustomRadio = (props) => {
+export const CustomRadio = (props: {
+  value: string;
+  description?: string;
+  children?: React.ReactNode;
+}) => {
   const {
     Component,
     children,
