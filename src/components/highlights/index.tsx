@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { nanoid } from "nanoid";
 
 type Item = {
   id: string;
@@ -39,12 +40,30 @@ const DeleteIcon = ({ onClick }: { onClick?: () => void }) => {
     </span>
   );
 };
-export default function Highlights() {
-  const [items, setItems] = useState<Item[]>([]);
+export default function Highlights({
+  data,
+  initFocusIndex,
+}: {
+  data: string[];
+  initFocusIndex?: number;
+}) {
+  const inputRefs = useRef<HTMLInputElement[]>([]);
+  const [items, setItems] = useState<Item[]>(() =>
+    data.map((value) => ({
+      id: nanoid(),
+      value,
+    }))
+  );
+
+  useEffect(() => {
+    if (initFocusIndex !== undefined && inputRefs.current[initFocusIndex]) {
+      inputRefs.current[initFocusIndex]?.focus();
+    }
+  }, [initFocusIndex]);
 
   const addItem = () => {
     const newItem: Item = {
-      id: `item-${items.length + 1}`,
+      id: nanoid(),
       value: "",
     };
     setItems([...items, newItem]);
@@ -101,6 +120,11 @@ export default function Highlights() {
                             className="w-full"
                           >
                             <Input
+                              ref={(el) => {
+                                if (el) {
+                                  inputRefs.current[index] = el;
+                                }
+                              }}
                               value={item.value}
                               onChange={(e) =>
                                 handleChange(index, e.target.value)

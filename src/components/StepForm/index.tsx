@@ -3,7 +3,7 @@ import { Chip, RadioGroup, useRadio, VisuallyHidden } from "@heroui/react";
 import { Button } from "@heroui/button";
 import { Checkbox } from "@heroui/checkbox";
 import { cn } from "@heroui/react";
-import Highlights from "../highlights";
+// import Highlights from "../highlights";
 
 type Mode = "brief" | "free" | "import";
 type Section = "basics" | "work" | "volunteer" | "education";
@@ -156,7 +156,7 @@ export default function StepForm() {
           </div>
         </>
       )}
-      {step === 2 && mode === "brief" && <Highlights />}
+      {/* {step === 2 && mode === "brief" && <Highlights />} */}
       <div className="mt-auto flex justify-between space-x-4">
         {step > 1 && (
           <Button variant="light" onPress={handleBack}>

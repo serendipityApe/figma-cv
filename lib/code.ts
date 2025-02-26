@@ -563,11 +563,15 @@ figma.on("selectionchange", () => {
       const { section, subSection, data } = elementData;
       if (subSection) {
         figma.notify(`Selected: ${section} > ${subSection}`);
-        console.log("Selected data:", data);
       } else {
         figma.notify(`Selected section: ${section}`);
         console.log("Selected section data:", data);
       }
+      // send data to ui
+      figma.ui.postMessage({
+        type: "selected-data",
+        data: { section, subSection, data },
+      });
     }
   }
 });
@@ -587,21 +591,14 @@ function recordElementId(
   resume.elements.set(element.id, path);
 }
 
-// ... rest of the code remains the same until findResumeDataByFigmaId function
-
 // Find resume data by Figma ID
 function findResumeDataByFigmaId(figmaId: string) {
   const path = resume.elements.get(figmaId);
-  let _a: any[] = [];
-  for (const [key, value] of resume.elements.entries()) {
-    _a.push([key, value]);
-  }
-  console.log(_a);
   if (!path) return null;
 
   const pathParts = path.split("_");
   const section = pathParts[0];
-  const sectionData = resume[section as keyof typeof resume];
+  let sectionData = resume[section as keyof typeof resume];
 
   if (pathParts.length === 1) {
     return {
@@ -609,20 +606,30 @@ function findResumeDataByFigmaId(figmaId: string) {
       data: sectionData,
     };
   }
+  let lastSection = Number(pathParts[pathParts.length - 1]);
+  let subSection = isNaN(lastSection) ? undefined : lastSection;
+  if (subSection !== undefined) pathParts.pop();
 
-  // Handle nested data
+  // Recursively traverse through the data structure
   let specificData: any = sectionData;
-  if (Array.isArray(sectionData)) {
-    const index = parseInt(pathParts[2]); // For paths like work_job_0
-    specificData = sectionData[index];
-  } else if (typeof sectionData === "object") {
-    const subSection = pathParts[1];
-    specificData = (sectionData as any)[subSection];
+  for (let i = 1; i < pathParts.length; i++) {
+    const part = pathParts[i];
+
+    if (Array.isArray(specificData)) {
+      const index = parseInt(part);
+      if (!isNaN(index) && index < specificData.length) {
+        specificData = specificData[index];
+      }
+    } else if (typeof specificData === "object" && specificData !== null) {
+      specificData = specificData[part];
+    }
+
+    if (specificData === undefined) break;
   }
 
   return {
-    section,
-    subSection: pathParts.slice(1).join("_"),
+    section: pathParts.join("_"),
+    subSection,
     data: specificData,
   };
 }
