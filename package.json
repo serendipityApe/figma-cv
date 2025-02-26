@@ -12,6 +12,7 @@
     "build:main": "esbuild lib/code.ts --bundle --outfile=dist/code.js"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@heroui/button": "2.2.13",
     "@heroui/checkbox": "^2.3.12",
     "@heroui/code": "2.2.10",

@@ -5,7 +5,7 @@ interface ResumeElement {
 }
 
 const resume = {
-  elements: {} as { [key: string]: ResumeElement },
+  elements: new Map(),
   $schema:
     "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   basics: {
@@ -213,26 +213,39 @@ function renderPeriod(parent: FrameNode, startDate: string, endDate: string) {
   return period;
 }
 
-function renderHighlights(parent: FrameNode, highlights: string[]) {
+function renderHighlights(
+  parent: FrameNode,
+  highlights: string[],
+  section?: string[],
+  subSection?: string
+) {
   if (!highlights.length) return;
 
   const highlightsFrame = createItemFrame();
+
   highlightsFrame.name = "Highlights";
   highlightsFrame.itemSpacing = 4;
-
-  highlights.forEach((highlight) => {
+  if (section && section.length)
+    recordElementId(section, highlightsFrame, subSection);
+  highlights.forEach((highlight, index) => {
     const bulletPoint = createText(`• ${highlight}`, STYLES.textSize);
+
+    if (section && section.length && subSection) {
+      recordElementId([...section, subSection], bulletPoint, `${index}`);
+    }
     bulletPoint.textAutoResize = "HEIGHT";
     bulletPoint.layoutAlign = "STRETCH";
     highlightsFrame.appendChild(bulletPoint);
   });
 
   parent.appendChild(highlightsFrame);
+
   return highlightsFrame;
 }
 // 创建通用的渲染函数
 function createSectionContainer(name: string) {
   const container = figma.createFrame();
+
   container.name = name;
   container.layoutMode = "VERTICAL";
   container.itemSpacing = STYLES.itemGap;
@@ -240,6 +253,7 @@ function createSectionContainer(name: string) {
   container.layoutAlign = "STRETCH";
   container.primaryAxisSizingMode = "AUTO";
   container.counterAxisSizingMode = "AUTO";
+
   return container;
 }
 // 渲染基本信息部分
@@ -248,6 +262,7 @@ async function renderBasicInfo(
   basics: typeof resume.basics
 ) {
   const container = figma.createFrame();
+
   container.name = "Basic Info";
   container.layoutMode = "VERTICAL";
   container.itemSpacing = STYLES.itemGap;
@@ -319,12 +334,17 @@ async function renderWorkExperience(
     jobFrame.appendChild(jobTitle);
     const period = renderPeriod(jobFrame, job.startDate, job.endDate);
     const description = renderDescription(jobFrame, job.summary);
-    const highlights = renderHighlights(jobFrame, job.highlights);
+    const highlights = renderHighlights(
+      jobFrame,
+      job.highlights,
+      ["work"],
+      `job_${index}_highlights`
+    );
 
     recordElementId("work", period, `job_${index}_period`);
     recordElementId("work", description, `job_${index}_description`);
-    if (highlights)
-      recordElementId("work", highlights, `job_${index}_highlights`);
+    // if (highlights)
+    //   recordElementId("work", highlights, `job_${index}_highlights`);
     container.appendChild(jobFrame);
   }
 
@@ -530,29 +550,6 @@ figma.ui.onmessage = async (msg: { type: string }) => {
   // figma.closePlugin();
 };
 
-// 添加工具函数来记录元素 ID
-function recordElementId(
-  section: string,
-  element: BaseNode,
-  subSection?: string
-) {
-  if (!resume.elements[section]) {
-    resume.elements[section] = { figmaId: "", children: {} };
-  }
-
-  if (subSection) {
-    if (!resume.elements[section].children) {
-      resume.elements[section].children = {};
-    }
-    if (!resume.elements[section].children![subSection]) {
-      resume.elements[section].children![subSection] = {};
-    }
-    resume.elements[section].children![subSection].figmaId = element.id;
-  } else {
-    resume.elements[section].figmaId = element.id;
-  }
-}
-
 // 添加选择监听
 figma.on("selectionchange", () => {
   const selection = figma.currentPage.selection;
@@ -575,38 +572,57 @@ figma.on("selectionchange", () => {
   }
 });
 
-// 假设要找到特定元素的 resume 数据
-function findResumeDataByFigmaId(figmaId: string) {
-  console.log("resume.elements: ", resume.elements);
-  for (const [section, data] of Object.entries(resume.elements)) {
-    if (data.figmaId === figmaId) {
-      return {
-        section,
-        data: resume[section as keyof typeof resume],
-      };
-    }
-    if (data.children) {
-      for (const [subSection, subData] of Object.entries(data.children)) {
-        if (subData.figmaId === figmaId) {
-          const sectionData = resume[section as keyof typeof resume];
-          let specificData;
+function recordElementId(
+  section: string | string[],
+  element: BaseNode,
+  subSection?: string
+) {
+  const sectionPath = Array.isArray(section) ? section : [section];
+  let path = sectionPath.join("_");
 
-          // 根据子部分查找具体数据
-          if (Array.isArray(sectionData)) {
-            const index = parseInt(subSection.split("_")[1]);
-            specificData = sectionData[index];
-          } else if (typeof sectionData === "object") {
-            specificData = (sectionData as any)[subSection];
-          }
-
-          return {
-            section,
-            subSection,
-            data: specificData,
-          };
-        }
-      }
-    }
+  if (subSection) {
+    path = `${path}_${subSection}`;
   }
-  return null;
+
+  resume.elements.set(element.id, path);
+}
+
+// ... rest of the code remains the same until findResumeDataByFigmaId function
+
+// Find resume data by Figma ID
+function findResumeDataByFigmaId(figmaId: string) {
+  const path = resume.elements.get(figmaId);
+  let _a: any[] = [];
+  for (const [key, value] of resume.elements.entries()) {
+    _a.push([key, value]);
+  }
+  console.log(_a);
+  if (!path) return null;
+
+  const pathParts = path.split("_");
+  const section = pathParts[0];
+  const sectionData = resume[section as keyof typeof resume];
+
+  if (pathParts.length === 1) {
+    return {
+      section,
+      data: sectionData,
+    };
+  }
+
+  // Handle nested data
+  let specificData: any = sectionData;
+  if (Array.isArray(sectionData)) {
+    const index = parseInt(pathParts[2]); // For paths like work_job_0
+    specificData = sectionData[index];
+  } else if (typeof sectionData === "object") {
+    const subSection = pathParts[1];
+    specificData = (sectionData as any)[subSection];
+  }
+
+  return {
+    section,
+    subSection: pathParts.slice(1).join("_"),
+    data: specificData,
+  };
 }

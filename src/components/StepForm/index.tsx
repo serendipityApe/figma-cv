@@ -3,6 +3,7 @@ import { Chip, RadioGroup, useRadio, VisuallyHidden } from "@heroui/react";
 import { Button } from "@heroui/button";
 import { Checkbox } from "@heroui/checkbox";
 import { cn } from "@heroui/react";
+import Highlights from "../highlights";
 
 type Mode = "brief" | "free" | "import";
 type Section = "basics" | "work" | "volunteer" | "education";
@@ -66,7 +67,7 @@ export const CustomRadio = (props: {
 };
 
 export default function StepForm() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [mode, setMode] = useState<Mode>("brief");
   const [sections, setSections] = useState<Section[]>([]);
 
@@ -100,6 +101,7 @@ export default function StepForm() {
         { pluginMessage: { type: "create-resume", mode } },
         "*"
       );
+      setStep(2);
     }
   };
 
@@ -109,7 +111,7 @@ export default function StepForm() {
 
   return (
     <div className="w-[350px] h-[450px] p-6 flex flex-col">
-      {step === 1 ? (
+      {step === 1 && (
         <>
           <h2 className="text-xl font-semibold mb-6">选择模式</h2>
           <RadioGroup onValueChange={(value) => handleModeSelect(value as any)}>
@@ -137,7 +139,8 @@ export default function StepForm() {
             </CustomRadio>
           </RadioGroup>
         </>
-      ) : (
+      )}
+      {step === 2 && mode === "free" && (
         <>
           <h2 className="text-xl font-semibold mb-6">选择简历内容</h2>
           <div className="space-y-4">
@@ -153,6 +156,7 @@ export default function StepForm() {
           </div>
         </>
       )}
+      {step === 2 && mode === "brief" && <Highlights />}
       <div className="mt-auto flex justify-between space-x-4">
         {step > 1 && (
           <Button variant="light" onPress={handleBack}>
