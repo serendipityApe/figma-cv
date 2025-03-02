@@ -127,3 +127,7 @@ export interface Resume {
   projects: Project[];
   meta: Meta;
 }
+
+export type ResumeSection = {
+  [K in keyof Resume]: Resume[K] extends (infer U)[] ? U : Resume[K];
+}[keyof Resume];
