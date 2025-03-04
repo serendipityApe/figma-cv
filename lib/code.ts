@@ -6,6 +6,7 @@ interface ResumeElement {
 
 const resume = {
   elements: new Map(),
+  pathToId: new Map<string, string>(), // path -> elementId
   $schema:
     "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   basics: {
@@ -540,13 +541,41 @@ async function renderResume() {
 }
 
 // 修改消息处理函数
-figma.ui.onmessage = async (msg: { type: string }) => {
+figma.ui.onmessage = async (msg: { type: string; data: any }) => {
   if (msg.type === "create-resume") {
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
     await figma.loadFontAsync({ family: "Inter", style: "Bold" });
     await renderResume();
   }
+  if (msg.type === "resume-edit") {
+    const { data, section, subSection, type } = msg.data;
+    // 处理数据更新
+    if (type === "highlights") {
+      const figmaId = findElementIdByPath(section);
+      if (figmaId) {
+        const highlightsElement = figma.getNodeById(figmaId);
+        if (highlightsElement && highlightsElement.type === "FRAME") {
+          // 清除现有的子元素
+          while (highlightsElement.children.length > 0) {
+            highlightsElement.children[0].remove();
+          }
 
+          // 添加新的子元素
+          data.forEach((highlight, index) => {
+            const bulletPoint = createText(`• ${highlight}`, STYLES.textSize);
+            bulletPoint.textAutoResize = "HEIGHT";
+            bulletPoint.layoutAlign = "STRETCH";
+            highlightsElement.appendChild(bulletPoint);
+
+            // 重新记录元素 ID
+            if (section && subSection) {
+              recordElementId([section], bulletPoint, `${index}`);
+            }
+          });
+        }
+      }
+    }
+  }
   // figma.closePlugin();
 };
 
@@ -589,6 +618,7 @@ function recordElementId(
   }
 
   resume.elements.set(element.id, path);
+  resume.pathToId.set(path, element.id);
 }
 
 // Find resume data by Figma ID
@@ -632,4 +662,8 @@ function findResumeDataByFigmaId(figmaId: string) {
     subSection,
     data: specificData,
   };
+}
+
+function findElementIdByPath(path: string): string | null {
+  return resume.pathToId.get(path) || null;
 }

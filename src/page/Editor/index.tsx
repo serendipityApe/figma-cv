@@ -19,7 +19,12 @@ function Editor({ data }: Props) {
       />
       <div className=" py-6 flex flex-col">
         {section.split("_").at(-1) === "highlights" && (
-          <Highlights data={elementsData} initFocusIndex={subSection} />
+          <Highlights
+            section={section}
+            subSection={subSection}
+            data={elementsData}
+            initFocusIndex={subSection}
+          />
         )}
       </div>
     </div>

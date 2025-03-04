@@ -43,8 +43,12 @@ const DeleteIcon = ({ onClick }: { onClick?: () => void }) => {
 export default function Highlights({
   data,
   initFocusIndex,
+  section,
+  subSection,
 }: {
   data: string[];
+  section: string;
+  subSection?: number;
   initFocusIndex?: number;
 }) {
   const inputRefs = useRef<HTMLInputElement[]>([]);
@@ -61,6 +65,18 @@ export default function Highlights({
     }
   }, [initFocusIndex]);
 
+  useEffect(() => {
+    const messageData = {
+      type: "resume-edit",
+      data: {
+        data: items.map((item) => item.value),
+        section,
+        subSection,
+        type: "highlights",
+      },
+    };
+    parent.postMessage({ pluginMessage: messageData }, "*");
+  }, [items]);
   const addItem = () => {
     const newItem: Item = {
       id: nanoid(),
