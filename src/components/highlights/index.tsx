@@ -66,6 +66,7 @@ export default function Highlights({
   }, [initFocusIndex]);
 
   useEffect(() => {
+    console.log("resume-edit", items);
     const messageData = {
       type: "resume-edit",
       data: {

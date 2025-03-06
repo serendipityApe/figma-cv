@@ -542,6 +542,7 @@ async function renderResume() {
 
 // 修改消息处理函数
 figma.ui.onmessage = async (msg: { type: string; data: any }) => {
+  console.log("code receive msg", msg);
   if (msg.type === "create-resume") {
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
     await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -552,8 +553,15 @@ figma.ui.onmessage = async (msg: { type: string; data: any }) => {
     // 处理数据更新
     if (type === "highlights") {
       const figmaId = findElementIdByPath(section);
+
+      console.log("figmaId", figmaId);
       if (figmaId) {
-        const highlightsElement = figma.getNodeById(figmaId);
+        console.log("figmaI2", figmaId);
+        const highlightsElement = await figma.getNodeByIdAsync(figmaId);
+        console.log(
+          "highlightsElement",
+          highlightsElement && highlightsElement.type
+        );
         if (highlightsElement && highlightsElement.type === "FRAME") {
           // 清除现有的子元素
           while (highlightsElement.children.length > 0) {
@@ -573,6 +581,8 @@ figma.ui.onmessage = async (msg: { type: string; data: any }) => {
             }
           });
         }
+      } else {
+        console.log("figmaId not found");
       }
     }
   }

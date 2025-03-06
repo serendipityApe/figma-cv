@@ -67,7 +67,7 @@ export const CustomRadio = (props: {
 };
 
 export default function StepForm() {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [mode, setMode] = useState<Mode>("brief");
   const [sections, setSections] = useState<Section[]>([]);
 
